@@ -5,12 +5,14 @@ num_columns=3
 
 PLAYER_X=-1
 PLAYER_O=0
-PLAYER_TURN=0
+AI_PLAYER=-1
+PLAYER_TURN=$PLAYER_O
 
 UNDECIDED=-1
 DRAW_STATE=0
 X_PLAYER_WON=1
 O_PLAYER_WON=2
+
 
 HORIZONTAL_STATE=$UNDECIDED
 VERTICAL_STATE=$UNDECIDED
@@ -19,6 +21,8 @@ GAME_STATE=$UNDECIDED
 MORE_MOVE_STATE=0
 
 BOARD_STATE=""
+IS_VS_AI=0
+
 
 function print_board(){
     for((i=0; i<num_rows; i++)); do
@@ -152,10 +156,24 @@ function check_game_state(){
     if [ "$VERTICAL_STATE" != "$UNDECIDED" ]; then
        GAME_STATE=$VERTICAL_STATE
     fi
-    if [ "$MORE_MOVE_STATE" == "0" ]; then
+    if [[ "$MORE_MOVE_STATE" == "0" && "$GAME_STATE" == "$UNDECIDED" ]]; then
         GAME_STATE=$DRAW_STATE
     fi
 }
+
+function get_ai_move(){
+    local i=-1
+    local j=-1
+    while :; do
+        i=$(($RANDOM % $num_rows))
+        j=$(($RANDOM % $num_rows))
+       if [[ "${board[$i,$j]}" != "$AI_PLAYER" && "${board[$i,$j]}" != "$PLAYER_TURN" ]]; then
+            board[$i,$j]="$AI_PLAYER"
+            break;
+        fi
+    done
+}
+
 
 function get_player_input(){
     local i=-1
@@ -166,34 +184,17 @@ function get_player_input(){
     elif [ "$index" -lt "1" ] || [ "$index" -gt 9 ]; then
         printf "Invalide move, try again"
     else
-        if [ "$index" -eq 1 ]; then
-            i=0
-            j=0
-        elif [ "$index" -eq 2 ]; then
-           i=0
-           j=1
-        elif [ "$index" -eq 3 ]; then
-            i=0
-            j=2
-        elif [ "$index" -eq 4 ]; then
-            i=1
-            j=0
-        elif [ "$index" -eq 5 ]; then
-            i=1
-            j=1
-        elif [ "$index" -eq 6 ]; then
-            i=1
-            j=2
-        elif [ "$index" -eq 7 ]; then
-            i=2
-            j=0
-        elif [ "$index" -eq 8 ]; then
-            i=2
-            j=1
-        elif [ "$index" -eq 9 ]; then
-            i=2
-            j=2
-        fi
+         case $index in
+            1) i=0; j=0 ;;
+            2) i=0; j=1 ;;
+            3) i=0; j=2 ;;
+            4) i=1; j=0 ;;
+            5) i=1; j=1 ;;
+            6) i=1; j=2 ;;
+            7) i=2; j=0 ;;
+            8) i=2; j=1 ;;
+            9) i=2; j=2 ;;
+        esac
     fi
 
     if [ "$index" -ne 99 ]; then
@@ -201,22 +202,44 @@ function get_player_input(){
             printf "Invalide move, try again"
         else
             board[$i,$j]="$PLAYER_TURN"
-            if [ "$PLAYER_TURN" == "$PLAYER_O" ];then
-                PLAYER_TURN="$PLAYER_X"
-            elif [ "$PLAYER_TURN" == "$PLAYER_X" ];then
-                PLAYER_TURN="$PLAYER_O" 
+            if [ "$IS_VS_AI" == "0" ]; then
+                if [ "$PLAYER_TURN" == "$PLAYER_O" ];then
+                    PLAYER_TURN="$PLAYER_X"
+                elif [ "$PLAYER_TURN" == "$PLAYER_X" ];then
+                    PLAYER_TURN="$PLAYER_O" 
+                fi
             fi
         fi
     fi
 }
 
+
+if [ $# -eq 0 ]; then
+    echo "Nie podano argumentu."
+    exit 1
+fi
+if [ $1 == "y" ] || [ $1 == "Y" ]; then
+    IS_VS_AI="1"
+elif [ $1 == "n" ] || [ $1 == "N" ]; then
+    IS_VS_AI="0"
+fi 
+
+
 initialize_board
+print_board
+print
 while :; do
-    
-    print_board
     get_player_input
+    print_board
     check_game_state
     
+    if [[ "$IS_VS_AI" == "1" && "$GAME_STATE" == "$UNDECIDED" ]]; then
+        printf "Ai move"
+        get_ai_move
+        print_board
+        check_game_state
+    fi
+ 
     if [ "$GAME_STATE" != "$UNDECIDED" ]; then
         print_board
         if [ "$GAME_STATE" == "$X_PLAYER_WON" ]; then
