@@ -215,7 +215,7 @@ function get_player_input(){
 
 
 if [ $# -eq 0 ]; then
-    echo "Nie podano argumentu."
+    echo "Nie podano argumentu. Jeżeli chcesz zagrać z komputerem to wpisz 'y' lub 'Y' a jeżeli nie to wpisz 'n' lub 'N'"
     exit 1
 fi
 if [ $1 == "y" ] || [ $1 == "Y" ]; then
