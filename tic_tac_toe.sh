@@ -18,7 +18,7 @@ HORIZONTAL_STATE=$UNDECIDED
 VERTICAL_STATE=$UNDECIDED
 DIAGONAL_STATE=$UNDECIDED
 GAME_STATE=$UNDECIDED
-MORE_MOVE_STATE=0
+MORE_MOVE_STATE=9
 
 BOARD_STATE=""
 IS_VS_AI=0
@@ -91,17 +91,6 @@ function initialize_board(){
     fi
 }
 
-function check_is_more_move(){
-    MORE_MOVE_STATE=0
-    for ((i=0; i<num_rows; i++)); do
-        for ((j=0; j<num_columns; j++)); do
-            if [ "${board[$i,$j]}" != "$PLAYER_X" ] || [ "${board[$i,$j]}" != "$PLAYER_O" ]; then
-                MORE_MOVE_STATE=$((result + 1))
-            fi
-        done 
-    done
-}
-
 function check_horizontal(){
     for ((i=0; i<num_rows; i++)); do
         if [[ "${board[$i,0]}" == "${board[$i,1]}" && "${board[$i,1]}" == "${board[$i,2]}" ]]; then
@@ -146,7 +135,6 @@ function check_game_state(){
     check_diagonal
     check_horizontal
     check_vertical
-    check_is_more_move
     if [ "$DIAGONAL_STATE" != "$UNDECIDED" ]; then
        GAME_STATE=$DIAGONAL_STATE
     fi
@@ -169,6 +157,7 @@ function get_ai_move(){
         j=$(($RANDOM % $num_rows))
        if [[ "${board[$i,$j]}" != "$AI_PLAYER" && "${board[$i,$j]}" != "$PLAYER_TURN" ]]; then
             board[$i,$j]="$AI_PLAYER"
+            MORE_MOVE_STATE=$((MORE_MOVE_STATE-1))
             break;
         fi
     done
@@ -202,6 +191,7 @@ function get_player_input(){
             printf "Invalide move, try again"
         else
             board[$i,$j]="$PLAYER_TURN"
+            MORE_MOVE_STATE=$((MORE_MOVE_STATE-1))
             if [ "$IS_VS_AI" == "0" ]; then
                 if [ "$PLAYER_TURN" == "$PLAYER_O" ];then
                     PLAYER_TURN="$PLAYER_X"
@@ -247,7 +237,7 @@ while :; do
         elif [ "$GAME_STATE" == "$O_PLAYER_WON" ]; then
             echo "PLAYER O WON"
         else
-            echo "DRAW"
+            echo "TIE"
         fi
         exit 0
     fi
