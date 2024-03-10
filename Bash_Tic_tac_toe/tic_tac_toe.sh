@@ -13,7 +13,6 @@ DRAW_STATE=0
 X_PLAYER_WON=1
 O_PLAYER_WON=2
 
-
 HORIZONTAL_STATE=$UNDECIDED
 VERTICAL_STATE=$UNDECIDED
 DIAGONAL_STATE=$UNDECIDED
@@ -22,7 +21,6 @@ MORE_MOVE_STATE=9
 
 BOARD_STATE=""
 IS_VS_AI=0
-
 
 function print_board(){
     for((i=0; i<num_rows; i++)); do
@@ -48,6 +46,7 @@ function save_board_state(){
         done 
     done
     BOARD_STATE+="$PLAYER_TURN;"
+    BOARD_STATE+="$MORE_MOVE_STATE;"
     printf "%s" "$BOARD_STATE" > savedGame.txt
     exit 0
 }
@@ -78,6 +77,7 @@ function load_saved_game(){
         done 
     done
     PLAYER_TURN=${elements[9]}
+    MORE_MOVE_STATE=${elements[10]}
 }
 
 function initialize_board(){
