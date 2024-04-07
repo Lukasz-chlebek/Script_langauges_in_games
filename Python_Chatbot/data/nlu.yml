@@ -1,0 +1,122 @@
+nlu:
+- intent: greet
+  examples: |
+    - Hello!
+    - Hi there
+    - Hey
+    - Good morning!
+    - Greetings!
+    - Hey, good to see you again!
+- intent: ask_opening_hours
+  examples: |
+    - Is the restaurant open on [Monday](day)?
+    - What are the opening hours on [Friday](day)?
+    - What time does the restaurant open on [Saturday](day)?
+    - When does the restaurant close on [Sunday](day)?
+    - What are the hours for the restaurant on [Thursday](day)?
+- intent: list_menu
+  examples: |
+    - What's on the menu?
+    - Can you list the dishes?
+    - What's cooking? Can you share the menu with me?
+    - I'd like to know what dishes I can expect. Could you list them?
+    - Could you please detail the menu items for me?
+    - What are the selections on your menu?
+    - Could you provide a rundown of the menu items?
+    - What culinary delights do you have on the menu today?
+    - I'm curious about the dishes you offer. Could you tell me more?
+    - What options do you have available for dining?
+    - I'm interested in exploring your menu. What's available?
+    - Can you give me an overview of the dishes I can choose from?
+- intent: place_order
+  examples: |
+    - I'd like to order [pizza](item).
+    - Can I have a [burger](item) [without cheese](special_requirement)?
+    - I'd like to order [sushi](item).
+    - I'd like to order a [salad](item)
+    - I'm in the mood for some [sushi](item).
+    - I'm in the mood for some [Spaghetti Carbonara](item).
+    - Can I get a [chicken curry](item) [with extra spice](special_requirement)?
+    - I'd like to order a [vegetarian wrap](item) [with hummus](special_requirement).
+    - Can you prepare a [steak medium-rare](item)?
+    - I'm craving a [falafel sandwich](item) [with tahini sauce](special_requirement).
+    - I'd like to order a [seafood paella](item) for two.
+    - Can you make a [vegan pizza](item) [with lots of veggies](special_requirement)?
+    - Can you prepare a [shrimp scampi](item) [with gluten-free pasta](special_requirement)?
+    - I'd like to order a [chicken Caesar salad](item) [without croutons](special_requirement).
+    - Can I get a [beef stir-fry](item) [with extra vegetables](special_requirement)?
+    - Can I get a [Hot-Dog](item) [without sausage](special_requirement)?
+    - Can I get a [Hot-Dog](item) [with extra ketchup](special_requirement)?
+    - Can I get a [Hot-Dog](item) [with extra onion](special_requirement)?
+    - I'm in the mood for a [Tiramisu](item).
+    - I'm in the mood for a [Tiramisu](item) [with topping](special_requirement).
+    - I'm in the mood for a [spicy tuna roll](item).
+    - Can you make a [mushroom risotto](item)?
+    - I'd like to try your [chicken tikka masala](item) [with naan bread](special_requirement).
+    - Can I order a [vegetable sushi platter](item)?
+    - Can I order a [Spaghetti Carbonara](item)?
+    - Can I order a [lasagne](item) [with more sauce](special_requirement)?
+    - Can I order a [lasagne](item) [without sauce](special_requirement)?
+    - Can I order a [lasagne](item) [with sauce](special_requirement)?
+    - Can you prepare a [salad](item) [with grilled vegetables](special_requirement)?
+    - I'd like to order a [burger](item) [with bacon](special_requirement).
+    - Can I get a [pasta primavera](item) [with extra garlic](special_requirement)?
+    - I'm in the mood for a [Greek gyro](item) [with tzatziki sauce](special_requirement).
+    - I'd like to order a [burger](item) [without fries](special_requirement).
+    - I'd like to order a [burger](item) [with fries](special_requirement).
+    - I'd like to order a [burger](item) [with some more fries](special_requirement).
+- intent: provide_delivery_address
+  examples: |
+    - No
+    - No, thank you
+    - Nah
+    - I will pick up in restaurant
+    - I'm fine
+    - My delivery address is [Main Street 3](delivery_address).
+    - I'd like my order delivered to [Oak Street 10](delivery_address).
+    - The delivery address for my order is [Elm Street 11, Oklahoma](delivery_address).
+    - Can you send my package to [Pine Street 31](delivery_address)?
+    - I need the delivery sent to [Maple Lane 11](delivery_address).
+    - My address for delivery is [Birch Road 98](delivery_address).
+    - Please deliver to [Cedar Court 246](delivery_address).
+    - The delivery should go to [Willow Way 11](delivery_address).
+    - Send it to [Spruce Drive 76](delivery_address), please.
+    - I'll need the order sent to [Cherry Lane 11](delivery_address).
+    - [Main Street 1](delivery_address)
+    - [Spruce Drive 69](delivery_address)
+    - [Cherry Lane 11](delivery_address)
+    - [Spruce Drive 76](delivery_address)
+    - [Main Street 3](delivery_address)
+    - [Cherry Lane 11](delivery_address)
+    - [Birch Road 98](delivery_address)
+    - [Cedar Court 246](delivery_address)
+    - [Oak Street 10](delivery_address)
+    - [Willow Way 11](delivery_address)
+    - [Mixton avenue 10](delivery_address)
+    - [Polish road 97](delivery_address)
+    - [Maple Lane 11](delivery_address)
+    - [Silk road 771](delivery_address)
+    - [Washington street 181](delivery_address)
+- intent: ask_for_ordered_meal
+  examples: |
+    - When will my meal be ready?
+    - What's the estimated time for my order to be prepared?
+    - How long until my food is ready?
+    - When can I expect my meal to be done?
+    - What's the wait time for my order?
+    - At what time will my food be ready?
+    - How much longer until my meal is cooked?
+    - When should I expect my order to be completed?
+    - What's the cooking time for my meal?
+    - When will my food be finished cooking?
+- intent: goodbye
+  examples: |
+    - Goodbye!
+    - Bye!
+    - See you later!
+    - Take care!
+    - Farewell!
+    - So long!
+    - Have a nice day!
+    - See you soon!
+    - Bye bye!

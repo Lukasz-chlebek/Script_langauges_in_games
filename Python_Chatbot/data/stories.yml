@@ -1,0 +1,7 @@
+stories:
+- story: Process order
+  steps:
+    - intent: place_order
+    - action: action_process_order
+    - intent: provide_delivery_address
+    - action: confirm_delivery_address

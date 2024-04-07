@@ -1,0 +1,41 @@
+version: "3.1"
+
+intents:
+  - greet
+  - ask_opening_hours
+  - list_menu
+  - place_order
+  - provide_delivery_address
+  - ask_for_ordered_meal
+  - goodbye
+
+entities:
+  - day:
+      influence_conversation: true
+  - item:
+      influence_conversation: true
+  - special_requirement:
+      influence_conversation: true
+  - delivery_address:
+      influence_conversation: true
+
+responses:
+  utter_greet:
+  - text: "Hello! Welcome to our restaurant!"
+  utter_ask_opening_hours:
+  - text: "We are open from 9 AM to 10 PM every day."
+  utter_list_menu:
+  - text: "Here are our menu items: ..."
+  utter_place_order:
+  - text: "What would you like to order?"
+  utter_goodbye:
+  - text: "Goodbye!"
+
+actions:
+  - respond_greeting
+  - respond_opening_hours
+  - list_menu_items
+  - action_process_order
+  - respond_get_ordered_meal
+  - confirm_delivery_address
+  - respond_goodbye

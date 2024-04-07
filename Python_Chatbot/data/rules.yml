@@ -1,0 +1,27 @@
+version: "3.1"
+
+rules:
+  - rule: Respond to greetings
+    steps:
+      - intent: greet
+      - action: respond_greeting
+
+  - rule: Respond to opening hours inquiry
+    steps:
+      - intent: ask_opening_hours
+      - action: respond_opening_hours
+
+  - rule: List menu items
+    steps:
+      - intent: list_menu
+      - action: list_menu_items
+
+  - rule: Respond to ask for ordered meal
+    steps:
+      - intent: ask_for_ordered_meal
+      - action: respond_get_ordered_meal
+
+  - rule: End conversation on goodbye
+    steps:
+      - intent: goodbye
+      - action: respond_goodbye
