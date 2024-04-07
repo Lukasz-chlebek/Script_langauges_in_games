@@ -12,3 +12,19 @@ Zadanie 1 TicTacToe-Bash
                      Bugs fixing https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/5f4b439ccd78d5d88592d0ce22deae6578941f1a
 
 Kod: Folder - Bash_Tic_tac_toe
+
+
+Zadanie 2 Python: Czatbot
+
+✅ 3.0 wymaganie 1 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/adb4cf41814997cd075c7047a0bd06b7de256ec3
+
+✅ 3.5 wymaganie 2 Ten sam co w wymaganiu 1
+
+✅ 4.0 wymaganie 3 Ten sam co w wymaganiu 1
+
+✅ 4.5 wymaganie 4 Ten sam co w wymaganiu 1
+
+✅ 5.0 wymaganie 5  Ten sam co w wymaganiu 1
+
+Kod: Folder - Python_Chatbot
+
