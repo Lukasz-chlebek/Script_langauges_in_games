@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <title>Simple Mario</title>
+</head>
+<body>
+
+<script>
+    class SimpleLevel extends Phaser.Scene
+    {
+        player;
+        cursors;
+        initialPlayerPosition;
+        map;
+        tiles;
+        layer;
+        levelData;
+        tileSize = 32;
+
+        init_board(){
+            const tileXCount = 25
+            const tileYCount = 18
+            let levelDate = []
+            for(let i=0; i< tileYCount; i++){
+                levelDate[i] = []
+                for(let j=0; j<tileXCount; j++){
+                    levelDate[i][j]= -1;
+                }
+            }
+
+            levelDate[5][23]=1
+            levelDate[5][24]=1
+
+            levelDate[6][14]=1
+            levelDate[6][19]=1;
+
+            levelDate[7][7]=1;
+            levelDate[7][8]=1;
+            levelDate[7][9]=1;
+
+            levelDate[8][0]=1;
+            levelDate[8][1]=1;
+            levelDate[8][2]=1;
+
+            levelDate[9][2]=1;
+            levelDate[9][3]=1;
+            levelDate[10][7]=1;
+            levelDate[10][8]=1;
+
+            levelDate[11][14]=1;
+            levelDate[11][15]=1;
+            levelDate[11][16]=1;
+            levelDate[11][17]=1;
+
+            levelDate[12][19]=1;
+
+            levelDate[13][21]= 1;
+
+            levelDate[14][6]= 1;
+            levelDate[14][24]= 1;
+
+            levelDate[15][2]= 1;
+            levelDate[15][6]= 1;
+            levelDate[15][7]= 1;
+            levelDate[15][23]= 1;
+            levelDate[15][24]= 1;
+
+            levelDate[16][0]= 1;
+            levelDate[16][1]= 1;
+            levelDate[16][2]= 1;
+            levelDate[16][3]= 1;
+            levelDate[16][6]= 1;
+            levelDate[16][7]= 1;
+            levelDate[16][8]= 1;
+            levelDate[16][9]= 1;
+            levelDate[16][10]= 1;
+            levelDate[16][13]= 1;
+            levelDate[16][14]= 1;
+            levelDate[16][15]= 1;
+            levelDate[16][16]= 1;
+
+            levelDate[16][22]= 1;
+            levelDate[16][23]= 1;
+            levelDate[16][24]= 1;
+
+            levelDate[17][3]= 1;
+            levelDate[17][6]= 1;
+            levelDate[17][10]= 1;
+            levelDate[17][13]= 1;
+            levelDate[17][16]= 1;
+            levelDate[17][22]= 1;
+
+            return levelDate
+        }
+        fill_board_with_pieces()
+        {
+            this.levelData.forEach((row, rowIndex) => {
+                row.forEach((tileValue, columnIndex) => {
+                    this.layer.putTileAt(tileValue, columnIndex, rowIndex);
+                    if (tileValue === 1 || tileValue === 2) {
+                        this.map.setCollisionBetween(tileValue, tileValue, true, this.layer);
+                    }
+                });
+            });
+        }
+        preload ()
+        {
+            this.load.setBaseURL('https://labs.phaser.io');
+
+            this.load.image('sky', 'assets/skies/clouds.png');
+            this.load.image('walls_1x2', 'assets/tilemaps/tiles/ground_1x1.png');
+            this.load.image('player', 'assets/sprites/pangball.png');
+        }
+        init_fields()
+        {
+            this.initialPlayerPosition = { x: 0, y: 480 };
+            this.map = this.make.tilemap({ width: 200, height: 200, tileWidth: 32, tileHeight: 32 });
+            this.tiles = this.map.addTilesetImage('walls_1x2', null, 32, 32);
+            this.layer = this.map.createBlankLayer('layer1', this.tiles);
+            this.player = this.physics.add.sprite(this.initialPlayerPosition.x, this.initialPlayerPosition.y, 'player');
+            this.levelData = this.init_board()
+        }
+        create ()
+        {
+            this.add.image(400, 300, 'sky');
+
+            this.init_fields()
+
+            this.fill_board_with_pieces()
+
+            this.player.setBounce(0.2);
+            this.player.setCollideWorldBounds(true);
+
+            this.cursors = this.input.keyboard.createCursorKeys();
+
+            this.physics.add.collider(this.player, this.layer);
+
+        }
+
+        update(time, delta)
+        {
+            if (this.cursors.left.isDown) {
+                this.player.setVelocityX(-160);
+            } else if (this.cursors.right.isDown) {
+                this.player.setVelocityX(160);
+            } else {
+                this.player.setVelocityX(0);
+            }
+
+            if (this.cursors.up.isDown && this.player.body.onFloor()) {
+                this.player.setVelocityY(-135);
+            }
+            if (this.player.y >= this.sys.game.config.height-this.tileSize) {
+                this.handlePlayerDeath();
+            }
+        }
+
+        handlePlayerDeath()
+        {
+            this.player.setVisible(false);
+            this.player.setPosition(this.initialPlayerPosition.x, this.initialPlayerPosition.y);
+            this.player.setVisible(true);
+        }
+
+    }
+
+    const config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 570,
+        scene: SimpleLevel,
+        pixelArt: true,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 200 }
+            }
+        }
+    };
+
+    const game = new Phaser.Game(config);
+</script>
+
+</body>
+</html>
