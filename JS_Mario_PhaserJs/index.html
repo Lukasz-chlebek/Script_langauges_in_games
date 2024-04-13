@@ -7,6 +7,9 @@
 <body>
 
 <script>
+    TILE = 1
+    PLAYER = 500
+    POINT = 1000
     class SimpleLevel extends Phaser.Scene
     {
         player;
@@ -17,6 +20,12 @@
         layer;
         levelData;
         tileSize = 32;
+        bestScore;
+        bestScoreText;
+        score;
+        scoreText;
+        points;
+        list_of_points = [];
 
         init_board(){
             const tileXCount = 25
@@ -29,113 +38,122 @@
                 }
             }
 
-            levelDate[5][23]=1
-            levelDate[5][24]=1
+            levelDate[5][23]=TILE;
+            levelDate[5][24]=TILE;
+            levelDate[4][23]=POINT;
 
-            levelDate[6][14]=1
-            levelDate[6][19]=1;
+            levelDate[6][14]=TILE;
+            levelDate[6][19]=TILE;
+            levelDate[6][8]=POINT;
 
-            levelDate[7][7]=1;
-            levelDate[7][8]=1;
-            levelDate[7][9]=1;
+            levelDate[7][7]=TILE;
+            levelDate[7][8]=TILE;
+            levelDate[7][9]=TILE;
 
-            levelDate[8][0]=1;
-            levelDate[8][1]=1;
-            levelDate[8][2]=1;
+            levelDate[8][0]=TILE;
+            levelDate[8][1]=TILE;
+            levelDate[8][2]=TILE;
 
-            levelDate[9][2]=1;
-            levelDate[9][3]=1;
-            levelDate[10][7]=1;
-            levelDate[10][8]=1;
+            levelDate[9][2]=TILE;
+            levelDate[9][3]=TILE;
+            levelDate[10][7]=TILE;
+            levelDate[10][8]=TILE;
 
-            levelDate[11][14]=1;
-            levelDate[11][15]=1;
-            levelDate[11][16]=1;
-            levelDate[11][17]=1;
+            levelDate[10][15]=POINT;
 
-            levelDate[12][19]=1;
+            levelDate[11][14]=TILE;
+            levelDate[11][15]=TILE;
+            levelDate[11][16]=TILE;
+            levelDate[11][17]=TILE;
 
-            levelDate[13][21]= 1;
+            levelDate[12][19]=TILE;
 
-            levelDate[14][6]= 1;
-            levelDate[14][24]= 1;
+            levelDate[13][21]=TILE;
 
-            levelDate[15][2]= 1;
-            levelDate[15][6]= 1;
-            levelDate[15][7]= 1;
-            levelDate[15][23]= 1;
-            levelDate[15][24]= 1;
+            levelDate[14][6]=TILE;
+            levelDate[14][24]=TILE;
 
-            levelDate[16][0]= 1;
-            levelDate[16][1]= 1;
-            levelDate[16][2]= 1;
-            levelDate[16][3]= 1;
-            levelDate[16][6]= 1;
-            levelDate[16][7]= 1;
-            levelDate[16][8]= 1;
-            levelDate[16][9]= 1;
-            levelDate[16][10]= 1;
-            levelDate[16][13]= 1;
-            levelDate[16][14]= 1;
-            levelDate[16][15]= 1;
-            levelDate[16][16]= 1;
+            levelDate[15][0]=PLAYER;
+            levelDate[15][2]=TILE;
+            levelDate[15][6]=TILE;
+            levelDate[15][7]=TILE;
+            levelDate[15][10]=POINT;
 
-            levelDate[16][22]= 1;
-            levelDate[16][23]= 1;
-            levelDate[16][24]= 1;
+            levelDate[15][23]=TILE;
+            levelDate[15][24]=TILE;
 
-            levelDate[17][3]= 1;
-            levelDate[17][6]= 1;
-            levelDate[17][10]= 1;
-            levelDate[17][13]= 1;
-            levelDate[17][16]= 1;
-            levelDate[17][22]= 1;
+            levelDate[16][0]=TILE;
+            levelDate[16][1]=TILE;
+            levelDate[16][2]=TILE;
+            levelDate[16][3]=TILE;
+            levelDate[16][6]=TILE;
+            levelDate[16][7]=TILE;
+            levelDate[16][8]=TILE;
+            levelDate[16][9]=TILE;
+            levelDate[16][10]=TILE;
+            levelDate[16][13]=TILE;
+            levelDate[16][14]=TILE;
+            levelDate[16][15]=TILE;
+            levelDate[16][16]=TILE;
+            levelDate[16][22]=TILE;
+            levelDate[16][23]=TILE;
+            levelDate[16][24]=TILE;
+
+            levelDate[17][3]=TILE;
+            levelDate[17][6]=TILE;
+            levelDate[17][10]=TILE;
+            levelDate[17][13]=TILE;
+            levelDate[17][16]=TILE;
+            levelDate[17][22]=TILE;
 
             return levelDate
         }
-        fill_board_with_pieces()
-        {
+        fill_board_with_pieces(){
             this.levelData.forEach((row, rowIndex) => {
                 row.forEach((tileValue, columnIndex) => {
-                    this.layer.putTileAt(tileValue, columnIndex, rowIndex);
-                    if (tileValue === 1 || tileValue === 2) {
+                    if (tileValue === TILE) {
+                        this.layer.putTileAt(tileValue, columnIndex, rowIndex);
                         this.map.setCollisionBetween(tileValue, tileValue, true, this.layer);
+                    }else if (tileValue === POINT){
+                        let position = this.calculate_pixels(rowIndex,columnIndex);
+                        console.log(position)
+                        this.addObjects(position.x,position.y)
                     }
                 });
             });
         }
-        preload ()
-        {
+        preload(){
             this.load.setBaseURL('https://labs.phaser.io');
 
             this.load.image('sky', 'assets/skies/clouds.png');
             this.load.image('walls_1x2', 'assets/tilemaps/tiles/ground_1x1.png');
             this.load.image('player', 'assets/sprites/pangball.png');
+            this.load.image('point', 'assets/sprites/shinyball.png');
         }
-        init_fields()
+        init()
         {
+            this.add.image(400, 300, 'sky');
             this.initialPlayerPosition = { x: 0, y: 480 };
             this.map = this.make.tilemap({ width: 200, height: 200, tileWidth: 32, tileHeight: 32 });
             this.tiles = this.map.addTilesetImage('walls_1x2', null, 32, 32);
             this.layer = this.map.createBlankLayer('layer1', this.tiles);
             this.player = this.physics.add.sprite(this.initialPlayerPosition.x, this.initialPlayerPosition.y, 'player');
-            this.levelData = this.init_board()
-        }
-        create ()
-        {
-            this.add.image(400, 300, 'sky');
-
-            this.init_fields()
-
-            this.fill_board_with_pieces()
-
             this.player.setBounce(0.2);
             this.player.setCollideWorldBounds(true);
-
+            this.levelData = this.init_board();
+            this.scoreText = this.add.text(10, 10, 'Score: 0', { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
+            this.score = 0;
+            this.bestScoreText = this.add.text(10, 40, 'Best Score: 0', { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
+            this.bestScore = 0;
+            this.points = this.physics.add.group();
             this.cursors = this.input.keyboard.createCursorKeys();
-
             this.physics.add.collider(this.player, this.layer);
-
+            this.physics.add.collider(this.points, this.layer);
+            this.physics.add.overlap(this.player, this.points, this.collectObject, null, this);
+        }
+        create (){
+            this.init()
+            this.fill_board_with_pieces()
         }
 
         update(time, delta)
@@ -156,13 +174,58 @@
             }
         }
 
-        handlePlayerDeath()
-        {
+        handlePlayerDeath(){
+           this.respawnPlayer();
+           this.setAndReRenderScores();
+           this.respawnPoints();
+        }
+        respawnPlayer(){
             this.player.setVisible(false);
             this.player.setPosition(this.initialPlayerPosition.x, this.initialPlayerPosition.y);
             this.player.setVisible(true);
         }
-
+        respawnPoints(){
+            this.list_of_points.forEach((point) => {
+                point.enableBody(true, point.x, point.y, true, true);
+            });
+        }
+        setAndReRenderScores(){
+            if(this.score > this.bestScore){
+                this.bestScore = this.score;
+                this.bestScoreText.setText('BestScore: ' + this.bestScore);
+            }
+            this.score = 0;
+            this.scoreText.setText('Score: '+ this.score);
+        }
+        addObjects(x, y){
+            let point = this.points.create(x, y, 'point');
+            point.setInteractive();
+            this.list_of_points.push(point)
+            this.physics.add.overlap(this.player, point, this.collectObject, null, this);
+        }
+        collectObject(player, object){
+            object.disableBody(true, true);
+            this.increaseScore()
+        }
+        increaseScore() {
+            this.score+=100;
+            this.scoreText.setText('Score: ' + this.score);
+        }
+        calculate_pixels(row, column) {
+            let x=this.tileSize/2;
+            let y=this.tileSize/2;
+            let tileX = 0;
+            let tileY = 0;
+            if(row!==0){
+                tileY = this.tileSize;
+                tileY=tileY*row
+            }
+            if(column!==0){
+                tileX = this.tileSize;
+                tileX=tileX*column
+            }
+            return {"x":x+tileX, "y":y+tileY}
+        }
     }
 
     const config = {
