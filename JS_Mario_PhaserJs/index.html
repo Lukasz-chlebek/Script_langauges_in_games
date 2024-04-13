@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl-PL">
+<html lang="pl-PL" xmlns="http://www.w3.org/1999/html">
 <head>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <title>Simple Mario</title>
@@ -7,9 +7,12 @@
 <body>
 
 <script>
+
     TILE = 1
     PLAYER = 500
     POINT = 1000
+    ENEMY = 1500
+
     class SimpleLevel extends Phaser.Scene
     {
         player;
@@ -25,15 +28,25 @@
         score;
         scoreText;
         points;
-        list_of_points = [];
+        listOfPoints = [];
+        enemies;
+        listOfEnemies = [];
+        healthBar;
+        maxHealthValue = 90;
+        healthValue = 90;
+        healthValueText;
+        lastHitTime = 0;
+        hitCooldown = 1000;
+        enemySpeed = 30;
+        tileXCount = 25;
+        tileYCount = 18;
 
-        init_board(){
-            const tileXCount = 25
-            const tileYCount = 18
+        initBoard(){
+
             let levelDate = []
-            for(let i=0; i< tileYCount; i++){
+            for(let i=0; i< this.tileYCount; i++){
                 levelDate[i] = []
-                for(let j=0; j<tileXCount; j++){
+                for(let j=0; j<this.tileXCount; j++){
                     levelDate[i][j]= -1;
                 }
             }
@@ -41,14 +54,18 @@
             levelDate[5][23]=TILE;
             levelDate[5][24]=TILE;
             levelDate[4][23]=POINT;
+            levelDate[4][24]=ENEMY;
 
             levelDate[6][14]=TILE;
             levelDate[6][19]=TILE;
+            levelDate[5][19]=ENEMY;
             levelDate[6][8]=POINT;
 
             levelDate[7][7]=TILE;
             levelDate[7][8]=TILE;
             levelDate[7][9]=TILE;
+            levelDate[7][0]=ENEMY;
+
 
             levelDate[8][0]=TILE;
             levelDate[8][1]=TILE;
@@ -60,6 +77,7 @@
             levelDate[10][8]=TILE;
 
             levelDate[10][15]=POINT;
+            levelDate[10][14]=ENEMY;
 
             levelDate[11][14]=TILE;
             levelDate[11][15]=TILE;
@@ -78,6 +96,7 @@
             levelDate[15][6]=TILE;
             levelDate[15][7]=TILE;
             levelDate[15][10]=POINT;
+            levelDate[15][14]=ENEMY;
 
             levelDate[15][23]=TILE;
             levelDate[15][24]=TILE;
@@ -108,7 +127,7 @@
 
             return levelDate
         }
-        fill_board_with_pieces(){
+        fillBoardWithPieces(){
             this.levelData.forEach((row, rowIndex) => {
                 row.forEach((tileValue, columnIndex) => {
                     if (tileValue === TILE) {
@@ -116,8 +135,13 @@
                         this.map.setCollisionBetween(tileValue, tileValue, true, this.layer);
                     }else if (tileValue === POINT){
                         let position = this.calculate_pixels(rowIndex,columnIndex);
-                        console.log(position)
-                        this.addObjects(position.x,position.y)
+                        this.addPointToMap(position.x,position.y)
+                    }else if (tileValue === ENEMY){
+                        let position = this.calculate_pixels(rowIndex,columnIndex);
+                        let borders = this.getPlatformUnderEnemy(rowIndex,columnIndex)
+                        let leftBorder = this.calculate_pixels(rowIndex,borders.MaxLeft);
+                        let rightBorder = this.calculate_pixels(rowIndex,borders.MaxRight);
+                        this.addEnemyToMap(position.x,position.y,leftBorder.x,rightBorder.x)
                     }
                 });
             });
@@ -129,6 +153,7 @@
             this.load.image('walls_1x2', 'assets/tilemaps/tiles/ground_1x1.png');
             this.load.image('player', 'assets/sprites/pangball.png');
             this.load.image('point', 'assets/sprites/shinyball.png');
+            this.load.image('enemy', 'assets/sprites/mine.png');
         }
         init()
         {
@@ -140,20 +165,25 @@
             this.player = this.physics.add.sprite(this.initialPlayerPosition.x, this.initialPlayerPosition.y, 'player');
             this.player.setBounce(0.2);
             this.player.setCollideWorldBounds(true);
-            this.levelData = this.init_board();
+            this.levelData = this.initBoard();
+
             this.scoreText = this.add.text(10, 10, 'Score: 0', { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
             this.score = 0;
             this.bestScoreText = this.add.text(10, 40, 'Best Score: 0', { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
             this.bestScore = 0;
             this.points = this.physics.add.group();
+            this.enemies = this.physics.add.group();
             this.cursors = this.input.keyboard.createCursorKeys();
             this.physics.add.collider(this.player, this.layer);
             this.physics.add.collider(this.points, this.layer);
-            this.physics.add.overlap(this.player, this.points, this.collectObject, null, this);
+            this.physics.add.collider(this.enemies, this.layer);
+            this.physics.add.overlap(this.player, this.points, this.collectPoint, null, this);
+            this.healthBar =  this.makeBar(575, 25)
+            this.setHealthBarUIValue()
         }
         create (){
             this.init()
-            this.fill_board_with_pieces()
+            this.fillBoardWithPieces()
         }
 
         update(time, delta)
@@ -168,24 +198,74 @@
 
             if (this.cursors.up.isDown && this.player.body.onFloor()) {
                 this.player.setVelocityY(-135);
+            }else if (this.cursors.down.isDown) {
+                this.player.setVelocityY(135);
             }
             if (this.player.y >= this.sys.game.config.height-this.tileSize) {
                 this.handlePlayerDeath();
             }
+            var tileSize = this.tileSize;
+            var enemySpeed= this.enemySpeed;
+            this.listOfEnemies.forEach(function(enemy) {
+                if(enemy.leftBorder === enemy.rightBorder && enemy.enemy.body.onFloor())
+                    enemy.enemy.setVelocityY(-180)
+                else{
+                    if (enemy.enemy.x<= enemy.leftBorder)
+                        enemy.enemy.setVelocityX(enemySpeed);
+                    else if (enemy.enemy.x>= enemy.rightBorder)
+                        enemy.enemy.setVelocityX(-enemySpeed);
+                }
+            },this);
+            this.listOfEnemies.forEach(function(enemy) {
+                if (enemy.enemy.y > game.config.height - tileSize) {
+                    enemy.enemy.disableBody(true, true);
+                }
+            }, this);
         }
 
         handlePlayerDeath(){
            this.respawnPlayer();
+           this.reInitHealthBar();
            this.setAndReRenderScores();
            this.respawnPoints();
+           this.respawnEnemies();
+        }
+        handleGetHit(player, enemy){
+            if (this.player.body.touching.down && enemy.body.touching.up) {
+                enemy.disableBody(true, true);
+                this.player.setVelocityY(-235);
+                this.score += 50;
+                this.scoreText.setText('Score: ' + this.score);
+            }else{
+                if (game.getTime() - this.lastHitTime < this.hitCooldown) {
+                    return;
+                }
+                this.healthValue -=30
+                this.setHealthBarUIValue();
+                if(this.healthValue === 0)
+                    this.handlePlayerDeath()
+
+                this.lastHitTime = game.getTime();
+            }
+        }
+        reInitHealthBar(){
+            this.healthValue = 90;
+            this.setHealthBarUIValue()
         }
         respawnPlayer(){
             this.player.setVisible(false);
             this.player.setPosition(this.initialPlayerPosition.x, this.initialPlayerPosition.y);
             this.player.setVisible(true);
         }
+        respawnEnemies(){
+            this.listOfEnemies.forEach((enemy) => {
+                enemy.enemy.disableBody(true, true);
+                enemy.enemy.enableBody(true, enemy.enemy.x, enemy.enemy.y, true, true);
+                enemy.enemy.setVelocityX(this.enemySpeed);
+            });
+        }
         respawnPoints(){
-            this.list_of_points.forEach((point) => {
+            this.listOfPoints.forEach((point) => {
                 point.enableBody(true, point.x, point.y, true, true);
             });
         }
@@ -197,14 +277,23 @@
             this.score = 0;
             this.scoreText.setText('Score: '+ this.score);
         }
-        addObjects(x, y){
+        addPointToMap(x, y){
             let point = this.points.create(x, y, 'point');
             point.setInteractive();
-            this.list_of_points.push(point)
-            this.physics.add.overlap(this.player, point, this.collectObject, null, this);
+            this.listOfPoints.push(point)
+            this.physics.add.overlap(this.player, point, this.collectPoint, null, this);
         }
-        collectObject(player, object){
-            object.disableBody(true, true);
+        addEnemyToMap(x, y,leftBorder, rightBorder){
+            let enemy = this.enemies.create(x, y, 'enemy');
+            enemy.setInteractive(false);
+            enemy.setCollideWorldBounds(true);
+            enemy.setVelocityX(this.enemySpeed);
+            this.listOfEnemies.push({"enemy":enemy, "leftBorder":leftBorder,"rightBorder":rightBorder})
+            this.physics.add.collider(this.player, enemy, this.handleGetHit, null, this);
+
+        }
+        collectPoint(player, point){
+            point.disableBody(true, true);
             this.increaseScore()
         }
         increaseScore() {
@@ -226,9 +315,52 @@
             }
             return {"x":x+tileX, "y":y+tileY}
         }
+        makeBar(x, y) {
+            let bar = this.add.graphics();
+            bar.fillStyle(0xFF0000, 1);
+            bar.fillRect(0, 0, 200, 25);
+            bar.x = x;
+            bar.y = y;
+
+            let outlines = this.add.graphics();
+            outlines.lineStyle(4, 0x000000);
+            outlines.strokeRect(0, 0, 200, 25);
+            outlines.x = x;
+            outlines.y = y;
+
+            this.healthValueText = this.add.text(625, 25,'Health: 90', { fontFamily: 'Arial', fontSize: 24, color: '#000000' })
+
+            return bar;
+        }
+        setHealthBarUIValue() {
+            this.healthBar.scaleX = this.healthValue / this.maxHealthValue;
+            this.healthValueText.setText('Health: ' + this.healthValue);
+        }
+        getPlatformUnderEnemy(row, column){
+            if(row===0)
+                return;
+            let underRow = row+1;
+            let maxLeft = column;
+            let maxRight = column;
+            for(let i= column; i>=0;i--){
+                maxLeft=i;
+                if(this.levelData[underRow][i]===TILE){
+                    continue;
+                }
+                break;
+            }
+            for(let i= column; i<this.tileXCount;i++){
+                maxRight=i;
+                if(this.levelData[underRow][i]===TILE)
+                    continue;
+                break;
+            }
+
+            return {"MaxLeft":maxLeft===0 ? maxLeft : maxLeft+1, "MaxRight": maxRight===this.tileXCount-1 ? maxRight : maxRight-1}
+        }
     }
 
-    const config = {
+    config = {
         type: Phaser.AUTO,
         width: 800,
         height: 570,
@@ -242,7 +374,8 @@
         }
     };
 
-    const game = new Phaser.Game(config);
+    game = new Phaser.Game(config);
+
 </script>
 
 </body>
