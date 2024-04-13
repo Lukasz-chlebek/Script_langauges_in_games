@@ -5,14 +5,89 @@
     <title>Simple Mario</title>
 </head>
 <body>
-
+<button id="loadLevels"> Load Levels</button>
+<label for="levelsInput">Select a levels:</label></br>
+<input type="file" id="levelsInput" name="level" accept="text/plain" multiple>
+<button id="basicGame">Play hardcoded level</button>
 <script>
 
+    function handleLoadLevelsButtonClick() {
+        deleteCanvases()
+        deleteGame()
+        let files = document.getElementById("levelsInput").files
+        loadLevelsMode = true;
+        levels = []
+        for (let file of files) {
+            readMapFile(file);
+        }
+        game = new Phaser.Game(config);
+    }
+    function handleBasicGameButtonClick() {
+        deleteCanvases()
+        deleteGame()
+        loadLevelsMode = false;
+        game = new Phaser.Game(config);
+    }
+    function deleteCanvases(){
+        let canvasElements = document.getElementsByTagName('canvas');
+
+        for (let i = 0; i < canvasElements.length; i++) {
+            let canvas = canvasElements[i];
+            canvas.parentNode.removeChild(canvas);
+        }
+    }
+    function deleteGame(){
+        if(game)
+            game.destroy()
+    }
+    function readMapFile(file) {
+        const reader = new FileReader();
+        let levelDate = []
+        reader.onload = function(event) {
+            const result = event.target.result;
+            const lines = result.trim().split('\n');
+            let value = EMPTY;
+            for(let i=0; i< lines.length; i++){
+                levelDate[i] = []
+                const columns = lines[i].trim().split(',');
+                for(let j=0; j<columns.length; j++){
+                    columns[j] = columns[j].trim();
+                    if(columns[j] === '-1')
+                        value = EMPTY;
+                    else if (columns[j] === '1')
+                        value = TILE;
+                    else if (columns[j] === '500')
+                        value = PLAYER
+                    else if (columns[j] === '1000')
+                        value = POINT
+                    else if (columns[j] === '1500')
+                        value = ENEMY
+                    else
+                        value = EMPTY
+                    levelDate[i][j] = value;
+                }
+            }
+            levels.push(levelDate)
+        };
+
+        reader.onerror = function(event) {
+            console.error(`Błąd podczas odczytu pliku ${file.name}`);
+        };
+
+        reader.readAsText(file);
+        return levelDate
+    }
+
+    document.getElementById("loadLevels").addEventListener("click", handleLoadLevelsButtonClick);
+    document.getElementById("basicGame").addEventListener("click", handleBasicGameButtonClick);
+    EMPTY = -1
     TILE = 1
     PLAYER = 500
     POINT = 1000
     ENEMY = 1500
-
+    loadLevelsMode = false;
+    let levels = []
+    game = null
     class SimpleLevel extends Phaser.Scene
     {
         player;
@@ -40,7 +115,12 @@
         enemySpeed = 30;
         tileXCount = 25;
         tileYCount = 18;
-
+        initPlayerX = 0;
+        initPlayerY = 0;
+        allEnemiesDisabled = false;
+        allPointsDisabled = false;
+        currentLevel = 0;
+        levelsCount = 0;
         initBoard(){
 
             let levelDate = []
@@ -51,6 +131,9 @@
                 }
             }
 
+            return levelDate
+        }
+        hardCodedLevel(levelDate){
             levelDate[5][23]=TILE;
             levelDate[5][24]=TILE;
             levelDate[4][23]=POINT;
@@ -98,6 +181,7 @@
             levelDate[15][10]=POINT;
             levelDate[15][14]=ENEMY;
 
+
             levelDate[15][23]=TILE;
             levelDate[15][24]=TILE;
 
@@ -124,8 +208,6 @@
             levelDate[17][13]=TILE;
             levelDate[17][16]=TILE;
             levelDate[17][22]=TILE;
-
-            return levelDate
         }
         fillBoardWithPieces(){
             this.levelData.forEach((row, rowIndex) => {
@@ -142,6 +224,10 @@
                         let leftBorder = this.calculate_pixels(rowIndex,borders.MaxLeft);
                         let rightBorder = this.calculate_pixels(rowIndex,borders.MaxRight);
                         this.addEnemyToMap(position.x,position.y,leftBorder.x,rightBorder.x)
+                    }else if (tileValue === PLAYER){
+                        let position = this.calculate_pixels(rowIndex,columnIndex);
+                        this.initialPlayerPosition.x = position.x;
+                        this.initialPlayerPosition.y = position.y;
                     }
                 });
             });
@@ -158,32 +244,49 @@
         init()
         {
             this.add.image(400, 300, 'sky');
-            this.initialPlayerPosition = { x: 0, y: 480 };
+
             this.map = this.make.tilemap({ width: 200, height: 200, tileWidth: 32, tileHeight: 32 });
             this.tiles = this.map.addTilesetImage('walls_1x2', null, 32, 32);
             this.layer = this.map.createBlankLayer('layer1', this.tiles);
+            this.initialPlayerPosition = { x: this.initPlayerX, y: this.initPlayerY };
+
             this.player = this.physics.add.sprite(this.initialPlayerPosition.x, this.initialPlayerPosition.y, 'player');
+
+            this.points = this.physics.add.group();
+            this.enemies = this.physics.add.group();
+            this.cursors = this.input.keyboard.createCursorKeys();
             this.player.setBounce(0.2);
             this.player.setCollideWorldBounds(true);
-            this.levelData = this.initBoard();
-
+            this.physics.add.collider(this.player, this.layer);
+            this.physics.add.overlap(this.player, this.points, this.collectPoint, null, this);
+            this.physics.add.collider(this.points, this.layer);
+            this.physics.add.collider(this.enemies, this.layer);
+            this.healthBar =  this.makeBar(575, 25)
+            this.setHealthBarUIValue()
+        }
+        initScores(){
             this.scoreText = this.add.text(10, 10, 'Score: 0', { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
             this.score = 0;
             this.bestScoreText = this.add.text(10, 40, 'Best Score: 0', { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
             this.bestScore = 0;
-            this.points = this.physics.add.group();
-            this.enemies = this.physics.add.group();
-            this.cursors = this.input.keyboard.createCursorKeys();
-            this.physics.add.collider(this.player, this.layer);
-            this.physics.add.collider(this.points, this.layer);
-            this.physics.add.collider(this.enemies, this.layer);
-            this.physics.add.overlap(this.player, this.points, this.collectPoint, null, this);
-            this.healthBar =  this.makeBar(575, 25)
-            this.setHealthBarUIValue()
+        }
+        initScoresText(){
+            this.scoreText = this.add.text(10, 10, 'Score: ' + this.score, { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
+            this.bestScoreText = this.add.text(10, 40, 'Best Score: ' + this.bestScore, { fontFamily: 'Arial', fontSize: 24, color: '#000000' });
         }
         create (){
+            if (!loadLevelsMode){
+                this.levelData = this.initBoard();
+                this.hardCodedLevel(this.levelData)
+            }else{
+                this.levelsCount = levels.length
+                this.levelData = levels[this.currentLevel]
+            }
+
             this.init()
+            this.initScores()
             this.fillBoardWithPieces()
+            this.respawnPlayer()
         }
 
         update(time, delta)
@@ -209,24 +312,59 @@
             this.listOfEnemies.forEach(function(enemy) {
                 if(enemy.leftBorder === enemy.rightBorder && enemy.enemy.body.onFloor())
                     enemy.enemy.setVelocityY(-180)
+                else if (enemy.enemy.y > game.config.height - tileSize) {
+                    enemy.enemy.disableBody(true, true);
+                }
                 else{
-                    if (enemy.enemy.x<= enemy.leftBorder)
+                    if (enemy.enemy.x<= enemy.leftBorder || enemy.enemy.body.blocked.left)
                         enemy.enemy.setVelocityX(enemySpeed);
-                    else if (enemy.enemy.x>= enemy.rightBorder)
+                    else if (enemy.enemy.x>= enemy.rightBorder || enemy.enemy.body.blocked.right)
                         enemy.enemy.setVelocityX(-enemySpeed);
                 }
             },this);
-            this.listOfEnemies.forEach(function(enemy) {
-                if (enemy.enemy.y > game.config.height - tileSize) {
-                    enemy.enemy.disableBody(true, true);
-                }
-            }, this);
         }
+        nextLevel(){
+            this.physics.pause();
+            var levelPassed = this.add.text(400, 200, 'Level passed!', { fontSize: '64px', fill: '#fff' });
+            levelPassed.setOrigin(0.5);
+            var moreInfo = this.add.text(400, 300, 'Press any key to continue', { fontSize: '32px', fill: '#fff' });
+            moreInfo.setOrigin(0.5);
+            this.input.keyboard.once('keydown', function () {
+                levelPassed.destroy();
+                moreInfo.destroy();
+                this.nextLeveLogic()
+            },this);
 
+        }
+        nextLeveLogic(){
+            this.currentLevel++;
+            this.allPointsDisabled = false;
+            this.levelData = levels[this.currentLevel]
+            this.clearPointsAndEnemies()
+            this.init()
+            this.fillBoardWithPieces()
+            this.respawnPlayer()
+            this.initScoresText()
+            this.setAndReRenderScores();
+            this.physics.resume();
+        }
+        wonScreen() {
+            this.setAndReRenderScores()
+            this.physics.pause();
+            var gameOverText = this.add.text(400, 200, 'You won!', { fontSize: '64px', fill: '#fff' });
+            gameOverText.setOrigin(0.5);
+            var finalScoreText = this.add.text(400, 300, 'Your score: ' + this.score, { fontSize: '32px', fill: '#fff' });
+            var finalBestScoreText = this.add.text(400, 350, 'Your best score: ' + this.bestScore, { fontSize: '32px', fill: '#fff' });
+            finalBestScoreText.setOrigin(0.5);
+            finalScoreText.setOrigin(0.5);
+        }
+        clearPointsAndEnemies(){
+            this.listOfPoints = []
+            this.listOfEnemies = []
+        }
         handlePlayerDeath(){
            this.respawnPlayer();
-           this.reInitHealthBar();
-           this.setAndReRenderScores();
+           this.setAndReRenderScoresAfterDeath();
            this.respawnPoints();
            this.respawnEnemies();
         }
@@ -236,6 +374,7 @@
                 this.player.setVelocityY(-235);
                 this.score += 50;
                 this.scoreText.setText('Score: ' + this.score);
+                this.allEnemiesDisabled = this.areAllEnemiesDisabled()
             }else{
                 if (game.getTime() - this.lastHitTime < this.hitCooldown) {
                     return;
@@ -248,6 +387,23 @@
                 this.lastHitTime = game.getTime();
             }
         }
+        checkCollision (object1, object2) {
+            let isColliding = false
+            this.physics.add.collider(object1, object2, function() {
+                isColliding=true;
+            });
+            return isColliding
+        }
+        areAllEnemiesDisabled() {
+            var allEnemiesDisabled = true;
+
+            this.listOfEnemies.forEach(function(enemy) {
+                if (enemy.enemy.body.enable) {
+                    allEnemiesDisabled = false;
+                }
+            });
+            return allEnemiesDisabled;
+        }
         reInitHealthBar(){
             this.healthValue = 90;
             this.setHealthBarUIValue()
@@ -256,6 +412,7 @@
             this.player.setVisible(false);
             this.player.setPosition(this.initialPlayerPosition.x, this.initialPlayerPosition.y);
             this.player.setVisible(true);
+            this.reInitHealthBar();
         }
         respawnEnemies(){
             this.listOfEnemies.forEach((enemy) => {
@@ -269,12 +426,20 @@
                 point.enableBody(true, point.x, point.y, true, true);
             });
         }
-        setAndReRenderScores(){
+        setAndReRenderScoresAfterDeath(){
             if(this.score > this.bestScore){
                 this.bestScore = this.score;
                 this.bestScoreText.setText('BestScore: ' + this.bestScore);
             }
             this.score = 0;
+            this.scoreText.setText('Score: '+ this.score);
+        }
+        setAndReRenderScores()
+        {
+            if(this.score > this.bestScore){
+                this.bestScore = this.score;
+                this.bestScoreText.setText('BestScore: ' + this.bestScore);
+            }
             this.scoreText.setText('Score: '+ this.score);
         }
         addPointToMap(x, y){
@@ -295,10 +460,27 @@
         collectPoint(player, point){
             point.disableBody(true, true);
             this.increaseScore()
+            this.allPointsDisabled = this.areAllPointsDisabled()
+            if(this.allPointsDisabled){
+                if(this.currentLevel< this.levelsCount-1){
+                    this.nextLevel()
+                }else
+                    this.wonScreen()
+            }
         }
         increaseScore() {
             this.score+=100;
             this.scoreText.setText('Score: ' + this.score);
+        }
+        areAllPointsDisabled() {
+            var allPointsDisabled = true;
+
+            this.listOfPoints.forEach(function(point) {
+                if (point.body.enable) {
+                    allPointsDisabled = false;
+                }
+            });
+            return allPointsDisabled;
         }
         calculate_pixels(row, column) {
             let x=this.tileSize/2;
@@ -374,7 +556,6 @@
         }
     };
 
-    game = new Phaser.Game(config);
 
 </script>
 
