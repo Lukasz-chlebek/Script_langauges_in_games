@@ -1,0 +1,28 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(25, 20px);
+    grid-template-rows: repeat(18, 20px);
+    gap: 1px;
+}
+.tile {
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border: 1px solid black;
+}
+.color-btn {
+    width: 40px;
+    height: 40px;
+    margin: 5px;
+    border:  2px solid black;
+    cursor: pointer;
+}
+#submit-button, #grid-container, #cancel-button,#color-palette {
+    display: none;
+}
+.selected-color {
+    border: 2px solid yellow;
+}
+.nav_bar{
+    display: inline-block;
+}

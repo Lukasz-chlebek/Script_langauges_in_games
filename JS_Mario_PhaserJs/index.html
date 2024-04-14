@@ -3,13 +3,165 @@
 <head>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <title>Simple Mario</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<button id="loadLevels"> Load Levels</button>
-<label for="levelsInput">Select a levels:</label></br>
-<input type="file" id="levelsInput" name="level" accept="text/plain" multiple>
-<button id="basicGame">Play hardcoded level</button>
+<div id="nav_bar">
+    <button id="loadLevels" onclick="handleLoadLevelsButtonClick()"> Load Levels</button>
+    <label id="levelsInputLabel" for="levelsInput">Select a levels:</label>
+    <input type="file" id="levelsInput" name="level" accept="text/plain" multiple>
+    <button id="basicGame" onclick="handleBasicGameButtonClick()">Play hardcoded level</button>
+    <button id="mapGenerator" onclick="handleMapGeneratorButtonClick()">Map generator</button>
+    <button id="submit-button" onclick="handleSubmitButtonClick()">Submit</button>
+    <button id="cancel-button" onclick="handleCancelButtonClick()">Cancel</button>
+</div>
+
+<div id="color-palette">
+    <div>
+        <button class="color-btn" style="background-color: brown;" onclick="setColor('brown')"></button>
+        <div>Tile</div>
+    </div>
+    <div>
+        <button class="color-btn" style="background-color: blue;" onclick="setColor('blue')"></button>
+        <div>Player</div>
+    </div>
+    <div>
+        <button class="color-btn" style="background-color: purple;" onclick="setColor('purple')"></button>
+        <div>Point</div>
+    </div>
+    <div>
+        <button class="color-btn" style="background-color: black;" onclick="setColor('black')"></button>
+        <div>Enemy</div>
+    </div>
+    <div>
+        <button class="color-btn" style="background-color: white;" onclick="setColor('white')"></button>
+        <div>Clear</div>
+    </div>
+
+</div>
+<div class="grid" id="grid-container"></div>
+
 <script>
+    let mouseDown = false;
+    let selectedColor = 'white';
+    const rows = 18;
+    const columns = 25;
+    let levels = []
+    EMPTY = -1
+    TILE = 1
+    PLAYER = 500
+    POINT = 1000
+    ENEMY = 1500
+    loadLevelsMode = false;
+    game = null
+    function createGrid() {
+        const gridContainer = document.getElementById('grid-container');
+        for (let i = 0; i < columns; i++) {
+            const column = document.createElement('div');
+            column.classList.add('grid-column');
+
+            for (let j = 0; j < rows; j++) {
+                const tile = document.createElement('div');
+                tile.classList.add('tile');
+                setColorOnTile(tile);
+                tile.addEventListener('mouseover', function() {
+                    if (mouseDown) {
+                        setColorOnTile(tile);
+                    }
+                });
+                tile.addEventListener('mousedown', function() {
+                    mouseDown = true;
+                    setColorOnTile(tile);
+                });
+                tile.addEventListener('mouseup', function() {
+                    mouseDown = false;
+                });
+
+                column.appendChild(tile);
+            }
+
+
+            gridContainer.appendChild(column);
+        }
+    }
+
+    function setColor(color) {
+        selectedColor = color;
+        updateSelectedColorBorder();
+    }
+
+    function setColorOnTile(tile) {
+        tile.style.backgroundColor = selectedColor;
+    }
+    function updateSelectedColorBorder() {
+        const colorButtons = document.querySelectorAll('.color-btn');
+        colorButtons.forEach(button => {
+            if (button.style.backgroundColor === selectedColor) {
+                button.classList.add('selected-color');
+            } else {
+                button.classList.remove('selected-color');
+            }
+        });
+    }
+    function changeDisplayMode(){
+        document.getElementById('loadLevels').style.display = 'inline';
+        document.getElementById('basicGame').style.display = 'inline';
+        document.getElementById('levelsInput').style.display = 'inline';
+        document.getElementById('levelsInputLabel').style.display = 'inline';
+        document.getElementById('mapGenerator').style.display = 'inline';
+        document.getElementById('color-palette').style.display = 'none';
+        document.getElementById('submit-button').style.display = 'none';
+        document.getElementById('grid-container').style.display = 'none';
+        document.getElementById('cancel-button').style.display = 'none';
+    }
+    function handleCancelButtonClick() {
+        changeDisplayMode()
+    }
+
+    function handleSubmitButtonClick() {
+        changeDisplayMode()
+        const gridTiles = document.querySelectorAll('.tile');
+        let levelData = []
+        for(let i=0; i< rows; i++){
+            levelData[i] = []
+            for(let j=0; j<columns; j++){
+                levelData[i][j]= -1;
+            }
+        }
+        let i = 0;
+        let j = 0;
+        gridTiles.forEach(tile => {
+            if (tile.style.backgroundColor === 'white')
+                levelData[i][j]= EMPTY;
+            else if (tile.style.backgroundColor === 'blue')
+                levelData[i][j]= PLAYER;
+            else if (tile.style.backgroundColor === 'purple')
+                levelData[i][j]= POINT;
+            else if (tile.style.backgroundColor === 'black')
+                levelData[i][j]= ENEMY;
+            else if (tile.style.backgroundColor === 'brown')
+                levelData[i][j]= TILE;
+            i++;
+            if(i===rows){
+                i=0;
+                j++;
+            }
+        });
+        saveDate(levelData);
+    }
+    function saveDate(levelData) {
+        let text = '';
+        for (let i = 0; i < levelData.length; i++) {
+            text += levelData[i].join(', ') + '\n';
+        }
+
+        let link = document.createElement('a');
+        link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        link.setAttribute('download', 'level.txt');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
     function handleLoadLevelsButtonClick() {
         deleteCanvases()
@@ -20,6 +172,10 @@
         for (let file of files) {
             readMapFile(file);
         }
+        if (files.length === 0){
+            alert("Upload some levels")
+            return;
+        }
         game = new Phaser.Game(config);
     }
     function handleBasicGameButtonClick() {
@@ -27,6 +183,33 @@
         deleteGame()
         loadLevelsMode = false;
         game = new Phaser.Game(config);
+    }
+    function clearButtons(){
+        const colorButtons = document.querySelectorAll('.color-btn');
+        colorButtons.forEach(button => {
+            button.classList.remove('selected-color');
+        });
+    }
+    function clearTiles() {
+        const gridTiles = document.querySelectorAll('.tile');
+        gridTiles.forEach(tile => {
+            tile.style.backgroundColor = 'white';
+        });
+    }
+    function handleMapGeneratorButtonClick() {
+        selectedColor = 'white'
+        clearButtons()
+        clearTiles()
+        document.getElementById('loadLevels').style.display = 'none';
+        document.getElementById('basicGame').style.display = 'none';
+        document.getElementById('levelsInput').style.display = 'none';
+        document.getElementById('levelsInputLabel').style.display = 'none';
+        document.getElementById('mapGenerator').style.display = 'none';
+        document.getElementById('color-palette').style.display = 'flex';
+        document.getElementById('submit-button').style.display = 'inline';
+        document.getElementById('grid-container').style.display = 'grid';
+        document.getElementById('cancel-button').style.display = 'inline';
+        createGrid();
     }
     function deleteCanvases(){
         let canvasElements = document.getElementsByTagName('canvas');
@@ -77,17 +260,6 @@
         reader.readAsText(file);
         return levelDate
     }
-
-    document.getElementById("loadLevels").addEventListener("click", handleLoadLevelsButtonClick);
-    document.getElementById("basicGame").addEventListener("click", handleBasicGameButtonClick);
-    EMPTY = -1
-    TILE = 1
-    PLAYER = 500
-    POINT = 1000
-    ENEMY = 1500
-    loadLevelsMode = false;
-    let levels = []
-    game = null
     class SimpleLevel extends Phaser.Scene
     {
         player;
@@ -307,8 +479,8 @@
             if (this.player.y >= this.sys.game.config.height-this.tileSize) {
                 this.handlePlayerDeath();
             }
-            var tileSize = this.tileSize;
-            var enemySpeed= this.enemySpeed;
+            let tileSize = this.tileSize;
+            let enemySpeed= this.enemySpeed;
             this.listOfEnemies.forEach(function(enemy) {
                 if(enemy.leftBorder === enemy.rightBorder && enemy.enemy.body.onFloor())
                     enemy.enemy.setVelocityY(-180)
@@ -325,9 +497,9 @@
         }
         nextLevel(){
             this.physics.pause();
-            var levelPassed = this.add.text(400, 200, 'Level passed!', { fontSize: '64px', fill: '#fff' });
+            let levelPassed = this.add.text(400, 200, 'Level passed!', { fontSize: '64px', fill: '#fff' });
             levelPassed.setOrigin(0.5);
-            var moreInfo = this.add.text(400, 300, 'Press any key to continue', { fontSize: '32px', fill: '#fff' });
+            let moreInfo = this.add.text(400, 300, 'Press any key to continue', { fontSize: '32px', fill: '#fff' });
             moreInfo.setOrigin(0.5);
             this.input.keyboard.once('keydown', function () {
                 levelPassed.destroy();
@@ -351,10 +523,10 @@
         wonScreen() {
             this.setAndReRenderScores()
             this.physics.pause();
-            var gameOverText = this.add.text(400, 200, 'You won!', { fontSize: '64px', fill: '#fff' });
+            let gameOverText = this.add.text(400, 200, 'You won!', { fontSize: '64px', fill: '#fff' });
             gameOverText.setOrigin(0.5);
-            var finalScoreText = this.add.text(400, 300, 'Your score: ' + this.score, { fontSize: '32px', fill: '#fff' });
-            var finalBestScoreText = this.add.text(400, 350, 'Your best score: ' + this.bestScore, { fontSize: '32px', fill: '#fff' });
+            let finalScoreText = this.add.text(400, 300, 'Your score: ' + this.score, { fontSize: '32px', fill: '#fff' });
+            let finalBestScoreText = this.add.text(400, 350, 'Your best score: ' + this.bestScore, { fontSize: '32px', fill: '#fff' });
             finalBestScoreText.setOrigin(0.5);
             finalScoreText.setOrigin(0.5);
         }
@@ -387,15 +559,9 @@
                 this.lastHitTime = game.getTime();
             }
         }
-        checkCollision (object1, object2) {
-            let isColliding = false
-            this.physics.add.collider(object1, object2, function() {
-                isColliding=true;
-            });
-            return isColliding
-        }
+
         areAllEnemiesDisabled() {
-            var allEnemiesDisabled = true;
+            let allEnemiesDisabled = true;
 
             this.listOfEnemies.forEach(function(enemy) {
                 if (enemy.enemy.body.enable) {
@@ -473,7 +639,7 @@
             this.scoreText.setText('Score: ' + this.score);
         }
         areAllPointsDisabled() {
-            var allPointsDisabled = true;
+            let allPointsDisabled = true;
 
             this.listOfPoints.forEach(function(point) {
                 if (point.body.enable) {
