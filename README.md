@@ -24,7 +24,22 @@ Zadanie 2 Python: Czatbot
 
 ✅ 4.5 wymaganie 4 Ten sam co w wymaganiu 1
 
-✅ 5.0 wymaganie 5  Ten sam co w wymaganiu 1
+✅ 5.0 wymaganie 5 Ten sam co w wymaganiu 1
 
 Kod: Folder - Python_Chatbot
+
+
+Zadanie 3  JS: Mario w PhaserJS
+
+✅ 3.0 wymaganie 1 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/8b3e0d3c1598352758f7c5956063c091300d7c62
+
+✅ 3.5 wymaganie 2 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/06bd50d55b8d7235ddd1650976cec927b755140a
+
+✅ 4.0 wymaganie 3 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/6f027725d98958ddc327a7faed7feae568c41437
+
+✅ 4.5 wymaganie 4 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/5896f7bfe2ca021b0839f4115f37aa2f951ec170
+
+✅ 5.0 wymaganie 5 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/0c5d546087e7d15cf2609a4a46778c3a489118ae
+
+Kod: Folder - JS_Mario_PhraserJs
 
