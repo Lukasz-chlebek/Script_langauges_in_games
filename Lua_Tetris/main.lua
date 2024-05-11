@@ -41,6 +41,64 @@ local timeSinceTick = 0
 local score = 0
 local gameIsOver = false
 local inMenu = true
+local volume = 0.1
+
+local moveSound = love.audio.newSource("move.mp3", "static")
+local rotateSound = love.audio.newSource("rotate.mp3", "static")
+local gameOverSound = love.audio.newSource("gameOver.mp3", "static")
+local clearRowSound = love.audio.newSource("deleteRow.mp3", "static")
+local menuSound = love.audio.newSource("menuSong.mp3", "static")
+local ambientSound = love.audio.newSource("ambient.mp3", "static")
+local background = love.graphics.newImage("background.jpg")
+
+
+
+local function playMoveSound()
+    moveSound:stop() 
+    moveSound:setVolume(volume)
+    moveSound:play()
+end
+
+local function playMenuSound()
+    menuSound:stop() 
+    menuSound:setVolume(volume)
+    menuSound:play()
+end
+local function stopMenuSound()
+    menuSound:stop() 
+end
+
+local function playAmbientSound()
+    ambientSound:stop() 
+    ambientSound:setVolume(0.01)
+    ambientSound:setLooping(true)
+    ambientSound:play()
+end
+local function stopAmbientSound()
+    ambientSound:stop() 
+end
+
+local function playRotateSound()
+    rotateSound:stop()
+    rotateSound:setVolume(volume)
+    rotateSound:play()
+end
+
+
+local function playGameOverSound()
+    gameOverSound:setVolume(volume)
+    gameOverSound:play()
+end
+local function stopGameOverSound()
+    gameOverSound:stop() 
+end
+
+
+local function playClearRowSound()
+    clearRowSound:stop()
+    clearRowSound:setVolume(volume)
+    clearRowSound:play()
+end
 
 local function initGrid()
     for i = 1, ROWS do
@@ -135,6 +193,7 @@ local function removeFullRow()
         end
         score = score + 200
     end
+    playClearRowSound()
     removeFullRow()
 end
 
@@ -148,6 +207,8 @@ local function isGameOver()
 end
 
 local function gameOver()
+    stopAmbientSound()
+    playGameOverSound()
     love.graphics.clear()
     love.graphics.setColor(1, 1, 1)
     love.graphics.printf("Game Over\nScore: " .. score .. "\nPress 'R' to restart\nPress 'M' to go back to menu ", 0, WINDOW_HEIGHT / 2 - 30, WINDOW_WIDTH, "center")
@@ -183,6 +244,7 @@ local function rotatePieceClockwise()
         end
     end
     currentPiece = newPiece
+    playRotateSound()
 end
 
 function love.load()
@@ -204,6 +266,7 @@ function love.load()
         width = 150,
         height = 50
     }
+    playMenuSound()
 end
 
 function love.update(dt)
@@ -238,7 +301,16 @@ function drawMenu()
     love.graphics.printf(buttonLoad.text, buttonLoad.x, buttonLoad.y + buttonLoad.height / 3, buttonLoad.width, "center")
 end
 
+function drawBackground()
+    for i = 0, love.graphics.getWidth() / background:getWidth() do
+        for j = 0, love.graphics.getHeight() / background:getHeight() do
+            love.graphics.draw(background, i * background:getWidth(), j * background:getHeight())
+        end
+    end
+end
+
 function love.draw()
+    drawBackground()
     if inMenu then
         drawMenu()
         return
@@ -309,11 +381,15 @@ function love.keypressed(key)
         currentCol = currentCol - 1
         if currentCol < 1 then
             currentCol = 1
+        else
+            playMoveSound()
         end
     elseif key == "right" then
         currentCol = currentCol + 1
         if currentCol + #currentPiece[1] - 1 > COLS then
             currentCol = COLS - #currentPiece[1] + 1
+        else
+            playMoveSound()
         end
     elseif key == "space" then
         rotatePieceClockwise()
@@ -321,9 +397,12 @@ function love.keypressed(key)
         resetGame()
     elseif key== "q" then
         saveGameStateToFile()
+        stopAmbientSound()
+        playMenuSound()
         inMenu = true
     elseif key== "m" then
         inMenu = true
+        stopAmbientSound()
     end
 end
 
@@ -336,6 +415,8 @@ function love.mousepressed(x, y, button)
         if x >= buttonLoad.x and x <= buttonLoad.x + buttonLoad.width and y >= buttonLoad.y and y <= buttonLoad.y + buttonLoad.height then
             loadGameStateFromFile()
         end
+        stopMenuSound()
+        playAmbientSound()
         inMenu = false
     end
 end
@@ -348,4 +429,5 @@ function resetGame()
     timeSinceTick = 0
     gameIsOver = false
     spawnNewPiece()
+    stopGameOverSound()
 end
