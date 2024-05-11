@@ -39,7 +39,8 @@ local tickTime = INITIAL_TICK_TIME
 local timeSinceTick = 0
 
 local score = 0
-local gameIsOver = false;
+local gameIsOver = false
+local inMenu = true
 
 local function initGrid()
     for i = 1, ROWS do
@@ -57,7 +58,7 @@ end
 
 local function drawScore()
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Score: " .. score, 10, 10)
+    love.graphics.print("Score: ".. score .. "\nPress 'Q' to save and go back to menu", 10, 10)
 end
 
 local function drawGrid()
@@ -149,7 +150,7 @@ end
 local function gameOver()
     love.graphics.clear()
     love.graphics.setColor(1, 1, 1)
-    love.graphics.printf("Game Over\nScore: " .. score .. "\nPress 'R' to restart", 0, WINDOW_HEIGHT / 2 - 30, WINDOW_WIDTH, "center")
+    love.graphics.printf("Game Over\nScore: " .. score .. "\nPress 'R' to restart\nPress 'M' to go back to menu ", 0, WINDOW_HEIGHT / 2 - 30, WINDOW_WIDTH, "center")
 end
 
 local function spawnNewPiece()
@@ -157,6 +158,15 @@ local function spawnNewPiece()
     currentPiece = shapes[currentShapeIndex]
     currentRow = 1
     currentCol = math.floor(COLS / 2)
+    if not canMoveDown() or isGameOver() then
+        gameIsOver = true
+        gameOver()
+        return
+    end
+end
+
+local function spawnPieceFromSave()
+    currentPiece = shapes[currentShapeIndex]
     if not canMoveDown() or isGameOver() then
         gameIsOver = true
         gameOver()
@@ -179,8 +189,21 @@ function love.load()
     love.window.setTitle("Tetris")
     love.window.setMode(WINDOW_WIDTH, WINDOW_HEIGHT)
     love.graphics.setBackgroundColor(0.2, 0.2, 0.2)
+    buttonStart = {
+        text = "New game",
+        x = 100,
+        y = 200,
+        width = 100,
+        height = 50
+    }
 
-    spawnNewPiece()
+    buttonLoad = {
+        text = "Load game",
+        x = 100,
+        y = 300,
+        width = 150,
+        height = 50
+    }
 end
 
 function love.update(dt)
@@ -201,12 +224,83 @@ function love.update(dt)
     end
 end
 
+function drawMenu()
+    love.graphics.setBackgroundColor(0.2, 0.2, 0.2)
+
+    love.graphics.setColor(0.4, 0.4, 0.8)
+    love.graphics.rectangle("fill", buttonStart.x, buttonStart.y, buttonStart.width, buttonStart.height)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.printf(buttonStart.text, buttonStart.x, buttonStart.y + buttonStart.height / 3, buttonStart.width, "center")
+
+    love.graphics.setColor(0.4, 0.4, 0.8)
+    love.graphics.rectangle("fill", buttonLoad.x, buttonLoad.y, buttonLoad.width, buttonLoad.height)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.printf(buttonLoad.text, buttonLoad.x, buttonLoad.y + buttonLoad.height / 3, buttonLoad.width, "center")
+end
+
 function love.draw()
+    if inMenu then
+        drawMenu()
+        return
+    end
     drawGrid()
     drawCurrentPiece()
     drawScore()
     if gameIsOver then
         gameOver()
+    end
+    
+end
+
+function saveGameStateToFile()
+    local filename = "gamestate.txt"
+    local file = io.open(filename, "w")
+
+    for i = 1, ROWS do
+        for j = 1, COLS do
+            file:write(grid[i][j] .. " ")
+        end
+        file:write("\n")
+    end
+
+    file:write("currentShapeIndex=" .. currentShapeIndex .. "\n")
+    file:write("score=" .. score .. "\n")
+    file:write("currentCol=" .. currentCol .. "\n")
+    file:write("currentRow=" .. currentRow .. "\n")
+    file:close()
+end
+
+function loadGameStateFromFile()
+    local filename = "gamestate.txt"
+    local file = io.open(filename, "r")
+
+    if file then
+        initGrid()
+        for i = 1, ROWS do
+            local line = file:read() 
+            local row = {}
+            for value in line:gmatch("%S+") do 
+                table.insert(row, tonumber(value)) 
+            end
+            grid[i] = row 
+        end
+
+        for line in file:lines() do
+            local key, value = line:match("([^=]+)=(.+)")
+            if key == "currentShapeIndex" then
+                currentShapeIndex = tonumber(value) 
+            elseif key == "score" then
+                score = tonumber(value)
+            elseif key == "currentCol" then
+                currentCol = tonumber(value)
+            elseif key == "currentRow" then
+                currentRow = tonumber(value)
+            end
+        end
+
+        file:close()
+    else
+        print("Cannot find file.")
     end
 end
 
@@ -225,6 +319,24 @@ function love.keypressed(key)
         rotatePieceClockwise()
     elseif key == "r" then
         resetGame()
+    elseif key== "q" then
+        saveGameStateToFile()
+        inMenu = true
+    elseif key== "m" then
+        inMenu = true
+    end
+end
+
+function love.mousepressed(x, y, button)
+    if button == 1 then
+        resetGame()
+        if x >= buttonStart.x and x <= buttonStart.x + buttonStart.width and y >= buttonStart.y and y <= buttonStart.y + buttonStart.height then
+            spawnNewPiece()
+        end
+        if x >= buttonLoad.x and x <= buttonLoad.x + buttonLoad.width and y >= buttonLoad.y and y <= buttonLoad.y + buttonLoad.height then
+            loadGameStateFromFile()
+        end
+        inMenu = false
     end
 end
 
