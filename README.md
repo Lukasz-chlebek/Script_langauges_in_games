@@ -13,6 +13,7 @@ Zadanie 1 TicTacToe-Bash
 
 Kod: Folder - Bash_Tic_tac_toe
 
+---------------------------------
 
 Zadanie 2 Python: Czatbot
 
@@ -28,6 +29,7 @@ Zadanie 2 Python: Czatbot
 
 Kod: Folder - Python_Chatbot
 
+---------------------------------
 
 Zadanie 3  JS: Mario w PhaserJS
 
@@ -42,4 +44,17 @@ Zadanie 3  JS: Mario w PhaserJS
 ✅ 5.0 wymaganie 5 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/0c5d546087e7d15cf2609a4a46778c3a489118ae
 
 Kod: Folder - JS_Mario_PhraserJs
+
+---------------------------------
+
+Zadanie 4  Lua: Tetris
+
+✅ 3.0 wymaganie 1 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/287ef358342e6a863ce445e4825acae83290898f
+
+✅ 3.5 wymaganie 2 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/cf137673808116a8dddbb0e22751bd6c6e9cb9df
+
+✅ 4.0 wymaganie 3 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/cf137673808116a8dddbb0e22751bd6c6e9cb9df 
++ fix - https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/da29f890c2e07f8e558fc7c8574458b4ed3e53be
+
+Kod: Folder - Lua_Tetris
 
