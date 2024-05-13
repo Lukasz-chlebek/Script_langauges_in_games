@@ -116,7 +116,7 @@ end
 
 local function drawScore()
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Score: ".. score .. "\nPress 'Q' to save and go back to menu", 10, 10)
+    love.graphics.print("Score: ".. score .. "\nPress 'Q' to save and go back to menu\nPress 'Esc' to quit to menu", 10, 10)
 end
 
 local function drawGrid()
@@ -211,7 +211,7 @@ local function gameOver()
     playGameOverSound()
     love.graphics.clear()
     love.graphics.setColor(1, 1, 1)
-    love.graphics.printf("Game Over\nScore: " .. score .. "\nPress 'R' to restart\nPress 'M' to go back to menu ", 0, WINDOW_HEIGHT / 2 - 30, WINDOW_WIDTH, "center")
+    love.graphics.printf("Game Over\nScore: " .. score .. "\nPress 'R' to restart\nPress 'M' to go back to menu", 0, WINDOW_HEIGHT / 2 - 30, WINDOW_WIDTH, "center")
 end
 
 local function spawnNewPiece()
@@ -403,6 +403,11 @@ function love.keypressed(key)
     elseif key== "m" then
         inMenu = true
         stopAmbientSound()
+        playMenuSound()
+    elseif key== "esc" then
+        inMenu = true
+        stopAmbientSound()
+        playMenuSound()
     end
 end
 
@@ -414,6 +419,7 @@ function love.mousepressed(x, y, button)
         end
         if x >= buttonLoad.x and x <= buttonLoad.x + buttonLoad.width and y >= buttonLoad.y and y <= buttonLoad.y + buttonLoad.height then
             loadGameStateFromFile()
+            spawnPieceFromSave()
         end
         stopMenuSound()
         playAmbientSound()
