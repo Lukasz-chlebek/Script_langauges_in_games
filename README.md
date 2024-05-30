@@ -58,3 +58,12 @@ Zadanie 4  Lua: Tetris
 
 Kod: Folder - Lua_Tetris
 
+Zadanie 4  Ruby: Mario
+
+✅ 3.0 wymaganie 1 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/7413dce42e10bc5f883789a5f6e40511aecfec18
+
+✅ 3.5 wymaganie 2 https://github.com/Lukasz-chlebek/Script_langauges_in_games/commit/7bb52b8b813eb0fabc7310375a2a1457304abc7b
+
+Kod: Folder - Ruby_Mario
+
+
